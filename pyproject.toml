@@ -1,0 +1,16 @@
+[project]
+name = "cloudera-ai-agent-studio-mcp"
+version = "0.0.1"
+description = "MCP Server to interact with Cloudera AI"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.28.0",
+    "pathlib>=1.0.1",
+    "python-dotenv>=1.0.0",
+    "mcp[cli]>=1.6.0",
+    "cmlapi",
+] 
+
+[tool.uv.sources]
+cmlapi = { path = "cmlapi.tar.gz" }
