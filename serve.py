@@ -346,6 +346,75 @@ def add_agent_to_workflow(workflow_id: str, agent_name: str, agent_role: str, ag
 
 
 
+@mcp.tool(
+    description="Adds a new tool to an Agent, which can be edited later."
+)
+def add_tool_to_agent(workflow_id: str, agent_id: str, tool_name: str) -> dict:
+    """
+    Adds a tool to a specified agent
+
+    Args:
+        workflow_id (str): the workflow ID that is currently being worked on
+        agent_id (str): the agent ID in the given workflow which will be owning the tool.
+        tool_name (str): the name of the tool (which agents will use to determine which tool to select)
+
+    Returns:
+        dict: information about the newly created tool
+    """
+    
+    # First, create the tool
+    resp = requests.post(
+        f"{CONFIG["host"]}/api/grpc/createToolInstance",
+        headers={
+            'Authorization': f"Bearer {CONFIG["api_key"]}"
+        },
+        verify=False,
+        json={
+            "workflow_id": workflow_id,
+            "name": tool_name
+        }
+    )
+    tool_data = resp.json()
+    
+    
+    # Then, update the agent accordingly
+    resp = requests.get(
+        f"{CONFIG["host"]}/api/grpc/getAgent?agent_id={agent_id}",
+        headers={
+            'Authorization': f"Bearer {CONFIG["api_key"]}"
+        },
+        verify=False,
+    )
+    data = resp.json()
+    agent = data["agent"]
+    
+    agent_tools = agent["tools_id"]
+    agent_tools.append(tool_data["tool_instance_id"])
+    
+    resp = requests.post(
+        f"{CONFIG["host"]}/api/grpc/updateAgent",
+        headers={
+            'Authorization': f"Bearer {CONFIG["api_key"]}"
+        },
+        verify=False,
+        json={
+            "agent_id": agent["id"],
+            "name": agent["name"],
+            "llm_provider_model_id": agent["llm_provider_model_id"],
+            "tools_id": agent_tools,
+            "crew_ai_agent_metadata": agent["crew_ai_agent_metadata"],
+            "tool_template_ids": []
+        }
+    )
+    
+    
+    return tool_data
+    
+    
+
+
+
+
 
 if __name__ == "__main__": 
     # Initialize and run the server
